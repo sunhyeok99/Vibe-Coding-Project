@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { buildPillars } from '../../../lib/saju';
 import { interpret } from '../../../lib/interpret';
-import { getDb } from '../../../lib/db';
+import { saveRecord } from '../../../lib/db';
 
 export async function POST(request) {
   const body = await request.json();
@@ -15,21 +15,17 @@ export async function POST(request) {
     const pillars = buildPillars({ birthDate, birthTime, calendarType, leapMonth: !!leapMonth, unknownTime: !!unknownTime });
     const interpretation = interpret(pillars);
 
-    const db = getDb();
-    db.prepare(
-      `INSERT INTO records (birth_date, birth_time, calendar_type, leap_month, gender, year_pillar, month_pillar, day_pillar, hour_pillar)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    ).run(
+    await saveRecord({
       birthDate,
-      unknownTime ? null : birthTime || null,
+      birthTime: unknownTime ? null : birthTime || null,
       calendarType,
-      leapMonth ? 1 : 0,
-      gender || null,
-      pillars.year.korean,
-      pillars.month.korean,
-      pillars.day.korean,
-      pillars.hour ? pillars.hour.korean : null
-    );
+      leapMonth: !!leapMonth,
+      gender: gender || null,
+      yearPillar: pillars.year.korean,
+      monthPillar: pillars.month.korean,
+      dayPillar: pillars.day.korean,
+      hourPillar: pillars.hour ? pillars.hour.korean : null,
+    });
 
     return NextResponse.json({ pillars, interpretation });
   } catch (err) {
