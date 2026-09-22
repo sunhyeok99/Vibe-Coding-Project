@@ -11,6 +11,30 @@ const initialForm = {
   gender: '',
 };
 
+const elementClass = {
+  목: 'el-wood',
+  화: 'el-fire',
+  토: 'el-earth',
+  금: 'el-metal',
+  수: 'el-water',
+};
+
+function Pillar({ label, pillar }) {
+  return (
+    <div className="pillar">
+      <div className="pillar-label">{label}</div>
+      {pillar ? (
+        <div className="pillar-chars">
+          <span className={elementClass[pillar.ganElement]}>{pillar.korean[0]}</span>
+          <span className={elementClass[pillar.zhiElement]}>{pillar.korean[1]}</span>
+        </div>
+      ) : (
+        <div className="pillar-empty">미상</div>
+      )}
+    </div>
+  );
+}
+
 export default function Home() {
   const [form, setForm] = useState(initialForm);
   const [result, setResult] = useState(null);
@@ -43,44 +67,44 @@ export default function Home() {
   }
 
   return (
-    <main style={{ maxWidth: 480, margin: '40px auto', padding: '0 16px', fontFamily: 'sans-serif' }}>
-      <h1>사주팔자 계산기</h1>
+    <main>
+      <h1 className="title">사주팔자</h1>
+      <div className="divider" />
+
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: 12 }}>
-          <label>양력 / 음력&nbsp;</label>
+        <div className="field">
+          <label>양력 / 음력</label>
           <select value={form.calendarType} onChange={(e) => update('calendarType', e.target.value)}>
             <option value="solar">양력</option>
             <option value="lunar">음력</option>
           </select>
           {form.calendarType === 'lunar' && (
-            <label style={{ marginLeft: 12 }}>
+            <label style={{ marginLeft: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
               <input type="checkbox" checked={form.leapMonth} onChange={(e) => update('leapMonth', e.target.checked)} />
-              &nbsp;윤달
+              윤달
             </label>
           )}
         </div>
 
-        <div style={{ marginBottom: 12 }}>
-          <label>생년월일&nbsp;</label>
+        <div className="field">
+          <label>생년월일</label>
           <input type="date" value={form.birthDate} onChange={(e) => update('birthDate', e.target.value)} required />
         </div>
 
-        <div style={{ marginBottom: 12 }}>
-          <label>
-            <input type="checkbox" checked={form.unknownTime} onChange={(e) => update('unknownTime', e.target.checked)} />
-            &nbsp;태어난 시간 모름
-          </label>
+        <div className="field-inline">
+          <input type="checkbox" checked={form.unknownTime} onChange={(e) => update('unknownTime', e.target.checked)} />
+          <label>태어난 시간 모름</label>
         </div>
 
         {!form.unknownTime && (
-          <div style={{ marginBottom: 12 }}>
-            <label>태어난 시간&nbsp;</label>
+          <div className="field">
+            <label>태어난 시간</label>
             <input type="time" value={form.birthTime} onChange={(e) => update('birthTime', e.target.value)} />
           </div>
         )}
 
-        <div style={{ marginBottom: 12 }}>
-          <label>성별 (선택)&nbsp;</label>
+        <div className="field">
+          <label>성별 (선택)</label>
           <select value={form.gender} onChange={(e) => update('gender', e.target.value)}>
             <option value="">선택 안 함</option>
             <option value="male">남</option>
@@ -89,34 +113,31 @@ export default function Home() {
         </div>
 
         <button type="submit" disabled={loading}>
-          {loading ? '계산 중...' : '사주 계산하기'}
+          {loading ? '계산 중...' : '사주 보기'}
         </button>
       </form>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p className="error">{error}</p>}
 
       {result && (
-        <section style={{ marginTop: 24 }}>
+        <section className="result">
           <h2>사주팔자</h2>
-          <table border="1" cellPadding="8" style={{ borderCollapse: 'collapse', width: '100%' }}>
-            <thead>
-              <tr>
-                <th>년주</th>
-                <th>월주</th>
-                <th>일주</th>
-                <th>시주</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>{result.pillars.year.korean} ({result.pillars.year.hanja})</td>
-                <td>{result.pillars.month.korean} ({result.pillars.month.hanja})</td>
-                <td>{result.pillars.day.korean} ({result.pillars.day.hanja})</td>
-                <td>{result.pillars.hour ? `${result.pillars.hour.korean} (${result.pillars.hour.hanja})` : '미상'}</td>
-              </tr>
-            </tbody>
-          </table>
-          <p style={{ marginTop: 16, lineHeight: 1.6 }}>{result.interpretation.summary}</p>
+          <div className="pillars">
+            <Pillar label="년주" pillar={result.pillars.year} />
+            <Pillar label="월주" pillar={result.pillars.month} />
+            <Pillar label="일주" pillar={result.pillars.day} />
+            <Pillar label="시주" pillar={result.pillars.hour} />
+          </div>
+
+          <div className="legend">
+            <span><i className="dot" style={{ background: 'var(--el-wood)' }} />목</span>
+            <span><i className="dot" style={{ background: 'var(--el-fire)' }} />화</span>
+            <span><i className="dot" style={{ background: 'var(--el-earth)' }} />토</span>
+            <span><i className="dot" style={{ background: 'var(--el-metal)' }} />금</span>
+            <span><i className="dot" style={{ background: 'var(--el-water)' }} />수</span>
+          </div>
+
+          <p className="interpretation">{result.interpretation.summary}</p>
         </section>
       )}
     </main>

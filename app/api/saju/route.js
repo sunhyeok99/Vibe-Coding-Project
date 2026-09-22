@@ -11,10 +11,16 @@ export async function POST(request) {
     return NextResponse.json({ error: '생년월일과 양력/음력 구분은 필수입니다.' }, { status: 400 });
   }
 
+  let pillars;
+  let interpretation;
   try {
-    const pillars = buildPillars({ birthDate, birthTime, calendarType, leapMonth: !!leapMonth, unknownTime: !!unknownTime });
-    const interpretation = interpret(pillars);
+    pillars = buildPillars({ birthDate, birthTime, calendarType, leapMonth: !!leapMonth, unknownTime: !!unknownTime });
+    interpretation = interpret(pillars);
+  } catch (err) {
+    return NextResponse.json({ error: err.message || '계산 중 오류가 발생했습니다.' }, { status: 400 });
+  }
 
+  try {
     await saveRecord({
       birthDate,
       birthTime: unknownTime ? null : birthTime || null,
@@ -26,9 +32,9 @@ export async function POST(request) {
       dayPillar: pillars.day.korean,
       hourPillar: pillars.hour ? pillars.hour.korean : null,
     });
-
-    return NextResponse.json({ pillars, interpretation });
   } catch (err) {
-    return NextResponse.json({ error: err.message || '계산 중 오류가 발생했습니다.' }, { status: 400 });
+    console.error('saveRecord failed:', err.message);
   }
+
+  return NextResponse.json({ pillars, interpretation });
 }
